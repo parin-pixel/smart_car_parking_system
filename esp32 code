@@ -1,0 +1,221 @@
+#include <WiFi.h>
+#define IR1 14
+#define IR2 18
+#define IR3 34
+#define IR4 19
+
+String slot1stat;
+String slot2stat;
+String slot3stat;
+String slot4stat;
+int ir1val;
+int ir2val;
+int ir3val;
+int ir4val;
+
+const char *ssid = "myESP";
+const char *password = "12345678";
+WiFiServer Server(80);
+
+void setup() {
+  // put your setup code here, to run once:
+Serial.begin(115200);
+pinMode(IR1,INPUT);
+pinMode(IR2,INPUT);
+pinMode(IR3,INPUT);
+pinMode(IR4,INPUT);
+
+WiFi.begin(ssid,password);
+Serial.print("Connecting..");
+while(WiFi.status() != WL_CONNECTED){
+  delay(500);
+  Serial.println("."); 
+}
+Serial.println(WiFi.localIP());
+
+Server.begin();
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+ir1val = digitalRead(IR1);
+ir2val = digitalRead(IR2);
+ir3val = digitalRead(IR3);
+ir4val = digitalRead(IR4);
+
+if(ir1val == 0){
+  slot1stat = "FULL";
+}
+else{
+  slot1stat = "EMPTY";
+}
+if(ir2val == 0){
+  slot2stat = "FULL";
+}
+else{
+  slot2stat = "EMPTY";
+}
+if(ir3val == 0){
+  slot3stat = "FULL";
+}
+else{
+  slot3stat = "EMPTY";
+}
+if(ir4val == 0){
+  slot4stat = "FULL";
+}
+else{
+  slot4stat = "EMPTY";
+}
+WiFiClient client = Server.available();
+if(client){
+  String request = client.readStringUntil('\r');
+  client.flush();
+
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: text/html");
+  client.println();
+  client.println(R"rawliteral(
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Parking System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script>setInterval(() => location.reload(), 2000);</script>
+  <style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+  font-family:'Share Tech Mono',monospace;
+  background:#0a0f1e;
+  min-height:100vh;
+  padding:2rem 1rem;
+  color:#c9d6f0;
+  }
+  .header{text-align:center;margin-bottom:2.5rem}
+  .header h1{
+  font-family:'Orbitron',sans-serif;
+  font-size:1.4rem;
+  font-weight:700;
+  color:#00e5ff;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  text-shadow:0 0 18px rgba(0,229,255,0.3);
+  margin-bottom:0.3rem;
+}
+  .header p{font-size:0.75rem;color:#4a6fa5;letter-spacing:0.2em;text-transform:uppercase}
+  .divider{width:60px;height:2px;background:linear-gradient(to right,transparent,#00e5ff,transparent);margin:.75rem auto 0}
+  .grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+  max-width:480px;
+  margin:0 auto 1.5rem;
+}
+.slot{
+  background:#0d1628;
+  border:1px solid #1a2a4a;
+  border-radius:12px;
+  padding:1.2rem 1rem;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  position:relative;
+  overflow:hidden;
+}
+.slot::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.slot.full::before{background:#ff4d4d}
+.slot.empty::before{background:#00e676}
+.label{font-family:'Orbitron',sans-serif;font-size:0.68rem;color:#4a6fa5;letter-spacing:0.2em;text-transform:uppercase}
+svg.car{width:54px;height:32px}
+.badge{font-size:0.7rem;font-weight:700;letter-spacing:0.15em;padding:3px 14px;border-radius:20px;text-transform:uppercase}
+.full .badge{background:rgba(255,77,77,0.15);color:#ff6b6b;border:1px solid rgba(255,77,77,0.3)}
+.empty .badge{background:rgba(0,230,118,0.12);color:#00e676;border:1px solid rgba(0,230,118,0.25)}
+.summary{
+  max-width:480px;
+  margin:0 auto;
+  background:#0d1628;
+  border:1px solid #1a2a4a;
+  border-radius:10px;
+  padding:.9rem 1.25rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:0.72rem;
+  color:#4a6fa5;
+}
+.summary b{color:#c9d6f0}
+.dot{width:7px;height:7px;border-radius:50%;background:#00e676;display:inline-block;margin-right:5px;vertical-align:middle;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Smart Parking</h1>
+  <p>Live Slot Monitor</p>
+  <div class="divider"></div>
+</div>
+<div class="grid">
+)rawliteral");
+
+// Full car SVG
+String fullCar = "<svg class='car' viewBox='0 0 56 34' fill='none'>"
+  "<rect x='4' y='13' width='48' height='15' rx='4' fill='#ff4d4d' fill-opacity='0.18' stroke='#ff4d4d' stroke-width='1.2'/>"
+  "<path d='M10 13 L15 5 H41 L46 13' stroke='#ff4d4d' stroke-width='1.2' fill='none' stroke-linejoin='round'/>"
+  "<rect x='16' y='6' width='10' height='6' rx='1' fill='#ff4d4d' fill-opacity='0.25'/>"
+  "<rect x='30' y='6' width='10' height='6' rx='1' fill='#ff4d4d' fill-opacity='0.25'/>"
+  "<circle cx='14' cy='28' r='4' fill='#1a2a4a' stroke='#ff4d4d' stroke-width='1.2'/>"
+  "<circle cx='42' cy='28' r='4' fill='#1a2a4a' stroke='#ff4d4d' stroke-width='1.2'/>"
+  "<rect x='4' y='17' width='6' height='3' rx='1' fill='#ff4d4d' fill-opacity='0.5'/>"
+  "<rect x='46' y='17' width='6' height='3' rx='1' fill='#ff4d4d' fill-opacity='0.5'/>"
+  "</svg>";
+
+// Empty car SVG (dashed outline)
+String emptyCar = "<svg class='car' viewBox='0 0 56 34' fill='none'>"
+  "<rect x='4' y='13' width='48' height='15' rx='4' fill='none' stroke='#1a3a2a' stroke-width='1.2' stroke-dasharray='4 3'/>"
+  "<path d='M10 13 L15 5 H41 L46 13' stroke='#1a3a2a' stroke-width='1.2' fill='none' stroke-linejoin='round' stroke-dasharray='4 3'/>"
+  "<circle cx='14' cy='28' r='4' fill='#0d1628' stroke='#1a3a2a' stroke-width='1.2'/>"
+  "<circle cx='42' cy='28' r='4' fill='#0d1628' stroke='#1a3a2a' stroke-width='1.2'/>"
+  "</svg>";
+
+// Slot 1
+client.println("<div class='slot " + String(ir1val==0?"full":"empty") + "'>");
+client.println("<div class='label'>Slot 01</div>");
+client.println(ir1val==0 ? fullCar : emptyCar);
+client.println("<span class='badge'>" + slot1stat + "</span></div>");
+
+// Slot 2
+client.println("<div class='slot " + String(ir2val==0?"full":"empty") + "'>");
+client.println("<div class='label'>Slot 02</div>");
+client.println(ir2val==0 ? fullCar : emptyCar);
+client.println("<span class='badge'>" + slot2stat + "</span></div>");
+
+// Slot 3
+client.println("<div class='slot " + String(ir3val==0?"full":"empty") + "'>");
+client.println("<div class='label'>Slot 03</div>");
+client.println(ir3val==0 ? fullCar : emptyCar);
+client.println("<span class='badge'>" + slot3stat + "</span></div>");
+
+// Slot 4
+client.println("<div class='slot " + String(ir4val==0?"full":"empty") + "'>");
+client.println("<div class='label'>Slot 04</div>");
+client.println(ir4val==0 ? fullCar : emptyCar);
+client.println("<span class='badge'>" + slot4stat + "</span></div>");
+
+// Count available slots
+int available = (ir1val!=0) + (ir2val!=0) + (ir3val!=0) + (ir4val!=0);
+int occupied  = 4 - available;
+
+client.println("</div>");
+client.println("<div class='summary'>");
+client.println("<span><span class='dot'></span>Live</span>");
+client.println("<span>Available: <b>" + String(available) + " / 4</b></span>");
+client.println("<span>Occupied: <b>" + String(occupied) + " / 4</b></span>");
+client.println("</div></body></html>");
+  delay(1);
+  client.stop();
+
+}
+}
