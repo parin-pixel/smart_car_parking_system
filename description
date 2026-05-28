@@ -1,0 +1,4 @@
+Smart Car Parking System built using Arduino, ESP32, IR sensors, servo motors, and a web interface. 
+The system provides live parking slot monitoring, QR-based entry, automated gate control, and real-time slot status updates through an ESP32-hosted website. 
+This project explores embedded systems, IoT, automation, and hardware-software integration.
+Improvements can be made in the project by adding features such as esp32 cam to capture vehicle number and calculate parking cost when vehicle exits and using ML to predict the probability of getting parking slots .
