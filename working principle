@@ -1,0 +1,17 @@
+## Working Principle
+
+The Smart Car Parking System works by combining sensors, microcontrollers, and a web interface to automate parking management.
+
+1. IR sensors are placed at parking slots and entry points to detect the presence of vehicles.
+
+2. The sensor data is processed by the ESP32 and Arduino microcontrollers.
+
+3. The ESP32 hosts a web server through Wi-Fi, which displays the real-time status of parking slots as Empty or Occupied.
+
+4. When a vehicle arrives at the entrance, the IR sensor detects it and the LCD prompts the user to scan the QR code.
+
+5. After entry, the Arduino controls the servo motor to automatically open and close the gate barrier.
+
+6. As vehicles occupy or leave parking slots, the sensor readings update the website dynamically.
+
+7. The system provides real-time parking monitoring and demonstrates the integration of embedded systems, IoT, automation, and web technologies.
